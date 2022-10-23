@@ -55,6 +55,7 @@ void loop() {
 
   uint32_t card = getIdCard();
 
+  // service button
   if (digitalRead(BUTTON_PIN) == LOW && isOpen) {
      bool addCardSuccess = tryAddCardInMremory(card);
      Serial.println("Try add card");
@@ -73,20 +74,22 @@ void loop() {
      }
      delay(2000);
 
-   } else {   
-    if (isCardInMremory(card)) {
-      playSoundAccess();
-      Serial.println("Access!");
-      openDoor();
+    return;
+   }
+   
+  // check card
+  if (isCardInMremory(card)) {
+    playSoundAccess();
+    Serial.println("Access!");
+    openDoor();
 
-    } else {
-      playSoundNotAccess();
-      Serial.println("NotAccess!");
-
-    }
-
-    delay(1000);
+    return;
   }
+
+  playSoundNotAccess();
+  Serial.println("NotAccess!");
+
+  delay(1000);
 }
 
 bool isCardInMremory(uint32_t id) {

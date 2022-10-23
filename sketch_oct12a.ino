@@ -14,11 +14,13 @@
 MFRC522 mfrc522(SS_PIN, RST_PIN);	// Create MFRC522 instance
 Servo servo;
 
+bool isOpen = false;
+
 void setup() {
 	Serial.begin(9600);		// Initialize serial communications with the PC
 	while (!Serial);		// Do nothing if no serial port is opened (added for Arduinos based on ATMEGA32U4)
 	SPI.begin();			// Init SPI bus
-	mfrc522.PCD_Init();		// Init MFRC522
+  mfrc522.PCD_Init();		// Init MFRC522
 
   // sound
   pinMode(BUZZER_PIN, OUTPUT);
@@ -30,8 +32,7 @@ void setup() {
 
   // servo init
   servo.attach(SERVO_PIN);
-  servo.write(0);
-  delay(2000);
+  openDoor();
 
   Serial.println("Waiting for card...");
 }
@@ -39,7 +40,7 @@ void setup() {
 void loop() {
   // close door
   if (digitalRead(HOLA_PIN) == LOW) {
-    closeDoor();
+    tryCloseDoor();
   }
 
 	// Look for new cards
@@ -54,7 +55,7 @@ void loop() {
 
   uint32_t card = getIdCard();
 
-  if (digitalRead(BUTTON_PIN) == LOW) {
+  if (digitalRead(BUTTON_PIN) == LOW && isOpen) {
      bool addCardSuccess = tryAddCardInMremory(card);
      Serial.println("Try add card");
 
@@ -129,6 +130,18 @@ bool tryRemoveCardFromMremory(uint32_t card) {
   return false;
 }
 
+bool isHaveCardInMremory() {
+  for (int i = 0; i < EEPROM.length(); i += 4) {
+    uint32_t data = 0;
+    EEPROM.get(i, data);
+
+    if (data != 255) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void clearMremory() {
   for (int i = 0; i < EEPROM.length(); i += 4) {
     uint32_t data = 255;
@@ -186,16 +199,23 @@ void playSoundNotAccess() {
     delay(150);
   }
 }
+void tryCloseDoor() {
+  if (!isHaveCardInMremory()) return;
+
+  closeDoor();
+}
 
 // door
 void openDoor() {
   // servo
+  isOpen = true;
   servo.write(90);
   delay(2000);
 }
 
 void closeDoor() {
   // servo
+  isOpen = false;
   servo.write(-90);
   delay(2000);
 }

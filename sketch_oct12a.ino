@@ -119,7 +119,7 @@ bool tryAddCardInMremory(uint32_t card) {
   return false;
 }
 
-void replaceCardsInPositionInMremory(int position) {
+void moveCardsInPositionInMremory(int position) {
   for (int i = position; i < EEPROM.length(); i += 4) {
     if (i + 4 >= EEPROM.length()) return;
 
@@ -142,7 +142,7 @@ bool tryRemoveCardFromMremory(uint32_t card) {
       EEPROM.put(i, 255);
 
       // replacing
-      replaceCardsInPositionInMremory(i);
+      moveCardsInPositionInMremory(i);
 
       return true;
     }
